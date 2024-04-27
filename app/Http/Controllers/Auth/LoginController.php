@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 use App\Models\AuthProvider;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
@@ -50,38 +51,37 @@ class LoginController extends Controller
     }
     public function handleLineCallback() {
         try{
-
-
-
-            dd('hello world');
-
-
-
-
             $user = Socialite::driver('line')->user();
-//            dd('success');
+//            dd($user);
             $finduser = AuthProvider::where('provider', 'line')->where('provider_id', $user->id)->first();
             if ($finduser) {
+//                dd('if');
                 $user = User::where('id', $finduser->user_id)->first();
                 Auth::login($user);
                 return redirect('/suc');
             } else {
+//                dd('else',$user);
                 $newUser = new User();
-                $newUser->name = $user->name ? $user->name : $user->nickname;
-                $newUser->email = $user->email;
+//                $newUser->name = $user->name ? $user->name : $user->nickname;
+                $newUser->name = 'name';
+//                $newUser->email = $user->email ? $user->email : 'aofphuwadech@gmail.com';
+                $newUser->email = 'aofphuwadech@gmail.com';
+                $newUser->assignRole = 'Member';
+                $newUser->password = Hash::make('1111');
                 $newUser->save();
-                $newUser->assignRole('Member');
 
                 $new_user = new AuthProvider();
                 $new_user->user_id = $newUser->id;
                 $new_user->provider = 'line';
                 $new_user->provider_id = $user->id;
                 $new_user->save();
-//                Auth::login($newUser);
+                Auth::login($newUser);
+
                 return redirect('/suc');
             }
         }
         catch(Exception $e) {
+            dd($e->getMessage());
             Log::error($e->getMessage());
             return redirect('/');
         }
